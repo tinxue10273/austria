@@ -28,7 +28,7 @@ ext {
 	lombokVersion = '1.18.12'
 	springBootVersion = '1.5.22.RELEASE'
 	springMvcVersion = '4.3.25.RELEASE'
-	dubboVersion = '2.7.16'
+	dubboVersion = '3.1.1'
 
 	env = System.getProperty("env") == null ? "development" : System.getProperty("env")
 }
@@ -55,7 +55,7 @@ allprojects {
 	//apply plugin: 'checkstyle'
 	apply plugin: 'io.spring.dependency-management'
 
-	group 'com.pinduoduo.service'
+	group 'com.lemon.service'
 	version '0.0.1'
 
 	sourceCompatibility = 1.8

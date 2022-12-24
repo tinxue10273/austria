@@ -13,8 +13,8 @@
 
     <dubbo:protocol name="dubbo"/>
 
-    <!--<dubbo:service interface="com.pinduoduo.service.erke.contract.api.task.service.OrderAfterRewardCouponApiService"
-                   ref="orderAfterRewardCouponApiServiceImpl"
+    <!--<dubbo:service interface=""
+                   ref=""
                    validation="true"
                    timeout="3000"/>-->
 </beans>
