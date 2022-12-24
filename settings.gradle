@@ -1,0 +1,10 @@
+rootProject.name = 'austria'
+include 'austria-common'
+include 'austria-console'
+include 'austria-api'
+include 'austria-contract'
+include 'austria-logic'
+include 'austria-service'
+include 'austria-integration'
+include 'austria-task'
+

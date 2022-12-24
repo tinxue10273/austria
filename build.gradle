@@ -1,0 +1,234 @@
+buildscript {
+
+	ext {
+		springBootVersion = '1.5.22.RELEASE'
+		dependencyManagementPluginVersion = '0.6.1.RELEASE'
+	}
+
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
+		classpath "io.spring.gradle:dependency-management-plugin:$dependencyManagementPluginVersion"
+	}
+
+}
+
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '2.7.6'
+	id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+}
+// 依赖放的版本号可以写在这里
+ext {
+	ehcacheVersion = '2.10.2'
+	mapStructVersion = '1.4.2.Final'
+	lombokVersion = '1.18.12'
+	springBootVersion = '1.5.22.RELEASE'
+	springMvcVersion = '4.3.25.RELEASE'
+	dubboVersion = '2.7.16'
+
+	env = System.getProperty("env") == null ? "development" : System.getProperty("env")
+}
+
+group = 'com.lemon'
+version = '0.0.1'
+sourceCompatibility = '1.8'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+allprojects {
+	apply plugin: 'idea'
+	apply plugin: 'base'
+	apply plugin: 'maven-publish'
+	apply plugin: 'java'
+	//apply plugin: 'checkstyle'
+	apply plugin: 'io.spring.dependency-management'
+
+	group 'com.pinduoduo.service'
+	version '0.0.1'
+
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
+
+	repositories {
+		mavenCentral()
+	}
+
+	configurations {
+		all*.exclude group: "ch.qos.logback"
+		all*.exclude group: "org.slf4j", module: "slf4j-log4j12"
+	}
+
+	configurations.all {
+		resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+	}
+
+	dependencies {
+		implementation "org.mapstruct:mapstruct:$mapStructVersion", "org.projectlombok:lombok:${lombokVersion}"
+		annotationProcessor "org.mapstruct:mapstruct-processor:$mapStructVersion", "org.projectlombok:lombok:${lombokVersion}"
+		//implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+		//implementation 'org.springframework.boot:spring-boot-starter-web'
+		compileOnly 'org.projectlombok:lombok'
+		//developmentOnly 'org.springframework.boot:spring-boot-devtools'
+		//runtimeOnly 'com.mysql:mysql-connector-j'
+		annotationProcessor 'org.projectlombok:lombok'
+		//testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+	}
+
+	/*if (it.name != "austria-contract") {
+		dependencies {
+			}
+	}*/
+
+
+	task sourcesJar(type: Jar, dependsOn: classes) {
+		classifier = 'sources'
+		from sourceSets.main.allSource
+	}
+
+	publishing {
+		publications {
+			mavenJava(MavenPublication) {
+				from components.java
+				artifact(sourcesJar) {
+					classifier = 'sources'
+				}
+				pom.withXml {
+					asNode().dependencies.dependency.each {
+						dep ->
+							if (dep.version.text() == "unspecified") {
+								dep.getAt('groupId').get(0).setValue(project.group)
+								dep.getAt('version').get(0).setValue(project.version)
+							}
+					}
+				}
+			}
+		}
+	}
+
+	sourceSets {
+		main {
+			resources {
+				srcDirs = ["src/main/resources/base", "src/main/resources/$env"]
+			}
+		}
+		test {
+			resources {
+				srcDirs = ["src/test/resources/base", "src/test/resources/$env"]
+			}
+		}
+	}
+
+
+	test {
+		jvmArgs "-Dfile.encoding=UTF-8"
+	}
+
+	tasks.withType(JavaCompile) {
+		options.encoding = "UTF-8"
+		options.incremental = false
+	}
+}
+
+project(":austria-contract") {
+	jar.archiveName = "austria-contract.jar"
+	version '0.0.1'
+	dependencies {
+	}
+}
+
+project(":austria-common") {
+	dependencies {
+		implementation project(":austria-contract")
+		implementation "org.springframework.boot:spring-boot-starter-aop:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-log4j2:$springBootVersion"
+	}
+}
+
+project(":austria-integration") {
+	dependencies {
+		implementation project(":austria-common")
+		implementation "com.alibaba:dubbo:$dubboVersion"
+		implementation "org.springframework.boot:spring-boot-starter-aop:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-log4j2:$springBootVersion"
+	}
+}
+
+project(":austria-service") {
+	dependencies {
+		implementation project(":austria-common")
+		implementation project(":austria-integration")
+		implementation "org.springframework.boot:spring-boot-starter-aop:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-log4j2:$springBootVersion"
+	}
+}
+
+project(":austria-logic") {
+	dependencies {
+		implementation project(":austria-common")
+		implementation project(":austria-integration")
+		implementation project(":austria-service")
+		implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-aop:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-log4j2:$springBootVersion"
+	}
+}
+
+project(":austria-console") {
+	dependencies {
+		implementation project(":austria-logic")
+		implementation "com.alibaba:dubbo:$dubboVersion"
+		implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-aop:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-log4j2:$springBootVersion"
+	}
+}
+
+project(":austria-api") {
+	dependencies {
+		implementation project(":austria-logic")
+		implementation "com.alibaba:dubbo:$dubboVersion"
+		implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-aop:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-log4j2:$springBootVersion"
+	}
+}
+
+project(":austria-task") {
+	dependencies {
+		implementation project(":austria-logic")
+		implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-aop:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-actuator:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
+		implementation "org.springframework.boot:spring-boot-starter-log4j2:$springBootVersion"
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
